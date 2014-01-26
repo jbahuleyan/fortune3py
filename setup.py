@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name = "fortune3py",
-    version = "2",
+    version = "2.0.1",
     description = "Fortune cookies for Python3",
     author = "Jimmy Bahuleyan",
     author_email = "jimmy.bahuleyan@gmail.com",
