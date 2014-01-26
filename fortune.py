@@ -22,6 +22,7 @@ class VersionAction(argparse.Action):
 def parse_args():
     argparser = argparse.ArgumentParser(prog = "fortune", description = "Fortune cookie program")
     argparser.add_argument('--debug', action = 'store_true')
+    argparser.add_argument('--ini', action = 'store', nargs = 1, help = 'configuration file path')
     argparser.add_argument('-a', action = 'store_true', help = 'choose from all fortunes')
     argparser.add_argument('-e', action = 'store_true', help = 'consider all fortune files to be equal size')
     argparser.add_argument('-f', action = 'store_true', help = 'print list of fortune files')
@@ -40,19 +41,25 @@ def parse_args():
 def uncomment(line):
     return line.split('#', maxsplit = 2)[0].strip('\n').strip()
 
-def read_config():
+def read_config(args):
     config = {'slen':'160', 'wait':'60', 'data':'datfiles', 'offdata':'datfiles/off'}
+    config_path = os.path.join(os.environ['HOME'], 'fortune.ini')
+    if args['ini']:
+        config_path = args['ini'][0]
     try:
-        with open('fortune.ini', 'r', encoding = 'utf8') as fd:
+        with open(config_path, 'r', encoding = 'utf8') as fd:
             for line in fd:
                 line = uncomment(line)
                 if len(line) == 0:
                     continue
                 pv = line.split('=', 2)
                 if len(pv) == 2:
-                    config[pv[0]] = pv[1]
+                    config[pv[0].strip()] = pv[1].strip()
     except:
         pass
+    if not os.path.exists(config['data']):
+        sys.stderr.write('Data files path (%s) does not exist. Check "data", "offdata" parameters in config file (%s).\n' % (os.path.realpath(config['data']), config_path))
+        sys.exit(-1)
     return config
 
 def get_files(config):
@@ -122,7 +129,7 @@ def main(argv):
     args = vars(parse_args())
     if args['debug']:
         pdb.set_trace()
-    config = read_config()
+    config = read_config(args)
     if args['f']:
         print_files(config)
     elif args['m']:
